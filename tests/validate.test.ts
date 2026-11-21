@@ -65,6 +65,14 @@ describe("dspec validate", () => {
     expect(result.errors.some((e) => e.path === "loops[0].exit")).toBe(true);
   });
 
+  test("rejects a loop without participants", () => {
+    const spec = validSpec();
+    spec.loops[0]!.over = [];
+    const result = validate(spec);
+    expect(result.errors.map((e) => e.code)).toContain("loop-participants-missing");
+    expect(result.errors.some((e) => e.path === "loops[0].over")).toBe(true);
+  });
+
   // §6.5 reading direction unset
   test("rejects an unset reading direction", () => {
     const spec = validSpec();
@@ -94,6 +102,14 @@ describe("dspec validate", () => {
     expect(codes(spec)).toContain("band-membership-empty");
   });
 
+  test("rejects a band without a definition", () => {
+    const spec = validSpec();
+    spec.bands[1] = { id: "peers", label: "peers", membership: ["dev_a", "dev_b"], view: "deployment" } as never;
+    const result = validate(spec);
+    expect(result.errors.map((e) => e.code)).toContain("band-definition-missing");
+    expect(result.errors.some((e) => e.path === "bands[1].definition")).toBe(true);
+  });
+
   test("rejects a band label that merges transport with actors", () => {
     const spec = validSpec();
     spec.bands[1] = {
@@ -113,6 +129,15 @@ describe("dspec validate", () => {
     const result = validate(spec);
     expect(result.errors.map((e) => e.code)).toContain("message-label-not-in-vocabulary");
     expect(result.errors.some((e) => e.path === "messages[0].label")).toBe(true);
+  });
+
+  // Explicit terminal step: the run must say how it ends.
+  test("rejects a spec without a terminal step", () => {
+    const spec = validSpec();
+    spec.terminal = [];
+    const result = validate(spec);
+    expect(result.errors.map((e) => e.code)).toContain("terminal-missing");
+    expect(result.errors.some((e) => e.path === "terminal")).toBe(true);
   });
 
   // §6.9 empty source_of_truth

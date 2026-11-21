@@ -46,6 +46,7 @@ const loopRules: Rule = (spec, push) => {
   }
   spec.loops.forEach((loop, index) => {
     if (!loop.exit?.trim()) push("loop-exit-missing", `loops[${index}].exit`, `loop '${loop.id}' has no exit condition`);
+    if (loop.over.length === 0) push("loop-participants-missing", `loops[${index}].over`, `loop '${loop.id}' has no participants`);
   });
 };
 
@@ -81,6 +82,9 @@ const bandRules: Rule = (spec, push) => {
     if (band.membership.length === 0) {
       push("band-membership-empty", `bands[${index}].membership`, `band '${band.id}' has no members`);
     }
+    if (!band.definition?.trim()) {
+      push("band-definition-missing", `bands[${index}].definition`, `band '${band.id}' has no definition`);
+    }
     const separator = TRANSPORT_SEPARATORS.find((candidate) => band.label.includes(candidate));
     if (separator) {
       push(
@@ -100,6 +104,11 @@ const messageRules: Rule = (spec, push) => {
       push("message-label-not-in-vocabulary", `messages[${index}].label`, `label '${message.label}' is not declared in vocabulary`);
     }
   });
+};
+
+/** The run must state how it ends and what it produces. */
+const terminalRule: Rule = (spec, push) => {
+  if (spec.terminal.length === 0) push("terminal-missing", "terminal", "no terminal step declares how the run ends");
 };
 
 /** 9: the content is traceable to something inspectable. */
@@ -178,6 +187,7 @@ export function validate(raw: unknown, opts: { adapters?: Registry } = {}): Vali
     legendRule,
     bandRules,
     messageRules,
+    terminalRule,
     sourceRule,
     identityRules,
     rendererRules(opts.adapters ?? shippedAdapters),
