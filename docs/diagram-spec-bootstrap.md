@@ -371,8 +371,13 @@ Rules for the extension:
 
 - Drawing pretty pictures. Aesthetics stay with the existing rendering skills;
   `diagram-spec` owns **content**.
-- Being a renderer. No SVG generation in v1 (the hand-authored `svg` adapter is a
-  thin string builder at most).
+- Being a renderer. `diagram-spec` does not attempt layout quality or aesthetics.
+  The hand-authored `svg` adapter stays, but only as a fixed-grid template: two
+  hard-coded grids (sequence, node) plus an orientation switch driven by
+  `meta.reading_direction`. It measures no text, wraps no label, routes no edge and
+  makes no aesthetic choice. It exists so the adapter interface and
+  renderer-agnosticism can be proven with no runtime at all; rendering quality is d2's
+  and mermaid's job. Evidence in `docs/adapter-findings.md`.
 - Replacing `excalidraw-diagram` / `fireworks-tech-graph`; it sits upstream of them.
 - Model-assisted layout. Every stage must be reproducible without an LLM.
 - Project-specific vocabulary. The A2A event names cited in the reference case are

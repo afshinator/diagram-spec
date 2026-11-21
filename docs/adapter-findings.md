@@ -147,9 +147,24 @@ adapter emits `.mmd` and stops. Use a renderer skill or a local `mmdc` to raster
 
 ## svg
 
-No runtime at all: the emitted `.svg` file is the artifact. This is what makes the
-two-adapter acceptance test runnable on a machine without `d2` or Chrome, and it is
-also why the adapter's scope is tracked as open issue #7.
+No runtime at all: the emitted `.svg` file is the artifact, which is why the
+`d2` + `svg` acceptance test runs on a machine with no `d2` binary and no browser.
+
+Scope, decided in #7 and pinned by tests in `tests/emit.test.ts`. It is a fixed-grid
+template, not a renderer: two hard-coded grids plus an orientation switch.
+
+- **Sequence view** — fixed 240 px columns, 52 px rows, palette by flow class. Geometry
+  is invariant to the declared reading direction:
+  `svg sequence geometry is a fixed grid regardless of declared reading direction`.
+- **Node view** — one grid rotated by `meta.reading_direction`: measured SVG box
+  `440x696` for `top-down`, `1100x456` for `left-right`:
+  `svg node geometry follows the declared reading direction and nothing else`.
+- **No render step** — the adapter has no `render`, so nothing is spawned:
+  `svg adapter ships no render step, so it needs no runtime`.
+
+It never measures text, wraps a label, routes an edge around an obstacle, avoids an
+overlap or chooses an aesthetic. Anything beyond those three tests is out of scope;
+d2 and mermaid are the rendering paths.
 
 ## Not measured here
 

@@ -190,6 +190,12 @@ function nodeView(spec: DiagramContent, view: View): string {
   return frame(ctx, cursor + PAD);
 }
 
+/**
+ * Fixed-grid template, not a renderer: two hard-coded grids (sequence, node) plus an
+ * orientation switch from `meta.reading_direction`. No text measurement, no label
+ * wrapping, no edge routing. Scope is pinned in tests/emit.test.ts and described in
+ * README + docs/adapter-findings.md (#7).
+ */
 export const svgAdapter: RendererAdapter = {
   id: "svg",
   capabilities: { sequence: "native", state: "native", component: "native", deterministic: true },

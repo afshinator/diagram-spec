@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync } from "node:fs";
 import { emit, render } from "../src/emit.ts";
+import { registry } from "../src/renderers/index.ts";
 import { validSpec, type Spec } from "./helpers.ts";
 
 function twoAdapterSpec(adapter: string): Spec {
@@ -34,6 +35,41 @@ describe("dspec emit", () => {
     const sequence = contentsOf(result.files, ".svg").join("\n");
     mustContain(sequence, [...needed, ...legend, "reading: top-down"]);
     expect(sequence.startsWith("<svg")).toBe(true);
+  });
+
+  // §14: the svg adapter is a fixed-grid template, not a layout engine. Two hard-coded
+  // grids (sequence, node) plus an orientation switch. No text measurement, no wrapping,
+  // no edge routing. This test is the contract: it fails if geometry starts adapting.
+  test("svg sequence geometry is a fixed grid regardless of declared reading direction", () => {
+    const svgFor = (direction: "top-down" | "left-right") => {
+      const spec = twoAdapterSpec("svg");
+      spec.meta.reading_direction = direction;
+      return contentsOf(emit(spec).files.filter((file) => file.path === "behaviour.svg"), ".svg").join("\n");
+    };
+    const geometry = (source: string) =>
+      [...source.matchAll(/\b(x|y|x1|y1|x2|y2|width|height)="(-?[\d.]+)"/g)].map((match) => match[2]);
+    const topDown = svgFor("top-down");
+    expect(geometry(topDown).length).toBeGreaterThan(20);
+    expect(geometry(svgFor("left-right"))).toEqual(geometry(topDown));
+  });
+
+  test("svg node geometry follows the declared reading direction and nothing else", () => {
+    const box = (direction: "top-down" | "left-right") => {
+      const spec = twoAdapterSpec("svg");
+      spec.meta.reading_direction = direction;
+      const svg = contentsOf(emit(spec).files.filter((file) => file.path === "deployment.svg"), ".svg").join("\n");
+      const [, width, height] = svg.match(/<svg [^>]*width="(\d+)" height="(\d+)"/) ?? [];
+      return { width: Number(width), height: Number(height) };
+    };
+    const column = box("top-down");
+    const row = box("left-right");
+    expect(column.height).toBeGreaterThan(column.width);
+    expect(row.width).toBeGreaterThan(row.height);
+  });
+
+  test("svg adapter ships no render step, so it needs no runtime", () => {
+    expect(registry["svg"]?.render).toBeUndefined();
+    expect(registry["svg"]?.capabilities.deterministic).toBe(true);
   });
 
   test("d2 adapter carries the same facts from the same YAML", () => {

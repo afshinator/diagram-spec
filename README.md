@@ -39,6 +39,12 @@ telemetry, no postinstall. Install the CLI as a binary with
 | `mermaid` | native | native | native | no, emit-only | `mmdc` (node + chromium) if you want SVG |
 | `svg` | native (manual) | native (manual) | native (manual) | writes SVG | none |
 
+The `svg` adapter is a fixed-grid template, not a general renderer: two hard-coded
+grids plus an orientation switch from `meta.reading_direction`, with no text
+measurement, no label wrapping and no edge routing. It exists so the adapter
+interface and renderer-agnosticism stay provable with no runtime at all. Rendering
+quality belongs to `d2` and `mermaid`.
+
 Capabilities are measured, not assumed. The seed table in
 `docs/diagram-spec-bootstrap.md` §7 predates any tool being run; the measurements,
 commands and observed output that decide each claim live in
