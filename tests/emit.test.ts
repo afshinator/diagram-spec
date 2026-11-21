@@ -130,15 +130,66 @@ describe("dspec emit", () => {
     rmSync(outDir, { recursive: true, force: true });
   });
 
-  // §13.6 renderer-agnosticism by real rendering, not by assertion.
-  test("d2 renders the same YAML to an SVG containing every actor and the loop", async () => {
-    const outDir = new URL("../.tmp/render", import.meta.url).pathname;
-    rmSync(outDir, { recursive: true, force: true });
-    mkdirSync(outDir, { recursive: true });
-    const result = await render(validSpec(), outDir);
-    expect(result.errors).toEqual([]);
-    const svg = await Bun.file(`${outDir}/behaviour.svg`).text();
-    mustContain(svg, ["Supervisor", "dev_a", "dev_b", "dispatch", "report", "peer-loop", "every peer reported"]);
-    rmSync(outDir, { recursive: true, force: true });
+  // §13.6 renderer-agnosticism, proven by rendering rather than by assertion.
+  // Two adapters whose output is a real artifact:
+  //   d2  - emits DSL, then the installed `d2` binary (v0.9.x) renders it to SVG.
+  //   svg - emits SVG directly, so its artifact needs no runtime at all.
+  // mermaid is deliberately emit-only: `mmdc` fetches a browser on first run, and
+  // the core must not perform a network install.
+  // Environment: requires the `d2` binary on PATH. Skipped (not silently passed)
+  // when absent so the requirement stays visible.
+  // Labels deliberately differ from ids, so a label in the artifact can only come
+  // from rendering that actor. With label === id, a loop's `over:` line would
+  // satisfy the assertion even if the actor header were missing.
+  function renderFixture(): Spec {
+    const spec = validSpec();
+    spec.actors = [
+      { id: "node-1", label: "Requester node", role: "asks for work", kind: "human" },
+      { id: "node-2", label: "Worker node", role: "does the work", kind: "service" },
+      { id: "node-3", label: "Reviewer node", role: "accepts the result", kind: "human" },
+    ];
+    spec.messages = [
+      { from: "node-1", to: "node-2", label: "dispatch", view: "behaviour" },
+      { from: "node-2", to: "node-1", label: "report", view: "behaviour" },
+      { from: "node-1", to: "node-3", label: "verdict", view: "behaviour" },
+    ];
+    spec.loops = [
+      { id: "work-cycle", over: ["node-1", "node-2", "node-3"], exit: "the reviewer accepts", view: "behaviour" },
+    ];
+    spec.terminal = [{ actor: "node-1", action: "publishes the result", produces: ["plan.md"] }];
+    spec.bands = [
+      { id: "control", label: "control plane", membership: ["node-1"], definition: "the requester", view: "deployment" },
+      { id: "workers", label: "worker plane", membership: ["node-2", "node-3"], definition: "the workers", view: "deployment" },
+    ];
+    return spec;
+  }
+
+  const twoRenderers = test.skipIf(!Bun.which("d2"));
+  twoRenderers("two adapters render the same YAML and both artifacts carry every actor and the loop", async () => {
+    const spec = renderFixture();
+    const actorLabels = spec.actors.map((actor) => actor.label);
+    const messageLabels = spec.messages.filter((message) => message.view === "behaviour").map((m) => m.label);
+    const loop = spec.loops[0]!;
+    const root = new URL("../.tmp/two-adapter", import.meta.url).pathname;
+    rmSync(root, { recursive: true, force: true });
+
+    for (const adapter of ["d2", "svg"]) {
+      const outDir = `${root}/${adapter}`;
+      mkdirSync(outDir, { recursive: true });
+      const paired = renderFixture();
+      paired.renderers = { behaviour: { adapter }, deployment: { adapter } } as never;
+      const result = await render(paired, outDir);
+      expect({ adapter, errors: result.errors }).toEqual({ adapter, errors: [] });
+
+      // The behaviour artifact carries every actor, every message, and the loop with its exit.
+      const behaviour = await Bun.file(`${outDir}/behaviour.svg`).text();
+      mustContain(behaviour, [...actorLabels, ...messageLabels, loop.id, String(loop.exit)]);
+
+      // The deployment artifact carries every actor.
+      const deployment = await Bun.file(`${outDir}/deployment.svg`).text();
+      mustContain(deployment, actorLabels);
+    }
+
+    rmSync(root, { recursive: true, force: true });
   });
 });
