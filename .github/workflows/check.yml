@@ -1,0 +1,41 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      # Pinned to the version the capability claims were measured against
+      # (docs/adapter-findings.md). Without d2 the two-adapter render test skips and
+      # this job goes green while proving less than it claims.
+      - name: Install d2 v0.9.0
+        run: |
+          curl -fsSL https://d2lang.com/install.sh | sh -s -- --version v0.9.0 --prefix "$HOME/.local"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - run: bun install --frozen-lockfile
+
+      # typecheck + tests + committed-DSL drift + fallow audit. The drift step catches a
+      # stale `generated/` file, which no test would.
+      - run: bun run check
+
+      - name: Assert no test skipped
+        run: |
+          set -o pipefail
+          bun test 2>&1 | tee .tmp-test.log
+          grep -qE '^ *0 fail' .tmp-test.log
+          if grep -q '(skip)' .tmp-test.log; then
+            echo "a test skipped: the environment is missing a tool this job promises to provide"
+            grep '(skip)' .tmp-test.log
+            exit 1
+          fi
+          rm -f .tmp-test.log

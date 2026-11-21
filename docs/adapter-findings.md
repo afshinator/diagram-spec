@@ -82,16 +82,24 @@ M 362.5 120 L 362.5 357   <- third lifeline, from the note; only 2 participants 
 ### Every text construct except a group label invents a column
 
 Measured across the constructs a sequence diagram might use for a title, a legend or
-a loop annotation. Two actors declared in each case; the actor row is the text at
-`y=90.5`, so anything extra there is a column:
+a loop annotation. Two actors declared in each case. Two distinct effects, and they are
+not the same thing:
 
-| Construct | Actor row | Extra column |
-|---|---|---|
-| baseline, two actors | `Supervisor, dev_a` | no |
-| `note over sup, a: "a note"` | `Supervisor, dev_a, a note` | **yes** |
-| `view_note: "..." { shape: text }` | `Supervisor, dev_a` | **yes** (third lifeline at x=397) |
-| `legend: Legend { ... }` | `Supervisor, dev_a, Legend` | **yes** |
-| `group: "..." { ... }` | `Supervisor, dev_a` | no |
+- an **actor row** entry (`y=90.5`) means d2 drew a participant box: it invents an actor;
+- an **extra lifeline** means an empty vertical column was reserved, with or without a
+  header label.
+
+| Construct | Actor row | Lifelines | Invents an actor |
+|---|---|---|---|
+| baseline, two actors | `Supervisor, dev_a` | 2 | no |
+| `note over sup, a: "a note"` | `Supervisor, dev_a, a note` | 3 | **yes** |
+| `view_note: "..." { shape: text }` | `Supervisor, dev_a` | 3 | no — but reserves an empty column |
+| `legend: Legend { ... }` | `Supervisor, dev_a, Legend` | 3 | **yes** |
+| `group: "..." { ... }` | `Supervisor, dev_a` | 2 | no |
+
+Only `group:` leaves the lifeline count untouched. `shape: text` is the subtler case:
+the text lands at `y=113`, below the actor row, so no phantom participant label
+appears, yet a third empty lifeline is still reserved.
 
 Consequences, and the choice made (#8):
 

@@ -72,8 +72,9 @@ SKILL.md             agent skill: content authoring, never rendering
 ```sh
 bun run typecheck
 bun run test
+bun run probe       # re-measure the renderer claims in docs/adapter-findings.md
 bun run generated   # regenerate committed renderer DSLs
-bun run check       # typecheck + tests + generated drift check + fallow audit
+bun run check       # all of the above plus the fallow audit; CI runs this
 ```
 
 ## Generated files
