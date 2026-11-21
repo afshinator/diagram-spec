@@ -1,0 +1,25 @@
+{
+  "name": "diagram-spec",
+  "version": "0.1.0",
+  "description": "Validated, renderer-agnostic diagram content: actors, behaviour loop, vocabulary, bands, legend, reading direction.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "dspec": "./src/cli.ts"
+  },
+  "scripts": {
+    "dspec": "bun src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "check": "bun run typecheck && bun test && fallow audit",
+    "build": "bun build --compile src/cli.ts --outfile bin/dspec"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "fallow": "^3.45.0",
+    "typescript": "^5.9.3"
+  }
+}

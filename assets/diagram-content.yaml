@@ -1,0 +1,64 @@
+# diagram-content.yaml — the single source. Renderer DSLs are generated from this.
+# Edit the content, never a generated file. Run `dspec validate` before you render.
+
+meta:
+  title: Requester and worker
+  subtitle: replace with what this system does, not what it is built from
+  # Required: name the files this content came from. Evidence, not invention.
+  source_of_truth:
+    - docs/example-source.md
+  # Required: declared, then checked against the render by eye.
+  reading_direction: top-down
+
+views:
+  # Required: kind must be sequence or state — something that can show a cycle.
+  - id: behaviour
+    kind: sequence
+    caption: who asks whom for what, and until when
+  # Optional and secondary: what exists where.
+  - id: deployment
+    kind: component
+    caption: what runs where
+
+# Required: at least two, each with a role. No "peers" catch-all.
+actors:
+  - { id: requester, label: Requester, role: asks for work and accepts the result, kind: human }
+  - { id: worker, label: Worker, role: does the work and reports back, kind: service }
+
+# Required in practice: every message label must also be declared here.
+vocabulary:
+  - { label: request, kind: control, symmetric: false }
+  - { label: report, kind: report, symmetric: false }
+  - { label: accept, kind: verdict, symmetric: false }
+
+messages:
+  - { from: requester, to: worker, label: request, view: behaviour }
+  - { from: worker, to: requester, label: report, view: behaviour }
+  - { from: requester, to: worker, label: accept, view: behaviour }
+
+# Required: the cycle, and the condition that ends it.
+loops:
+  - id: work-loop
+    over: [requester, worker]
+    exit: the requester accepts a report
+    view: behaviour
+
+# How the run ends. Optional, but its absence is the usual omission.
+terminal:
+  - { actor: requester, action: publishes the accepted result, produces: [result.md] }
+
+# Required when a view uses more than one flow class (here: control, report, verdict).
+legend:
+  - { class: control, meaning: work handed over }
+  - { class: report, meaning: status coming back }
+  - { class: verdict, meaning: accepted or rejected }
+
+# Bands are memberships with definitions. Never join transport to actors in one band.
+bands:
+  - { id: demand, label: demand side, membership: [requester], definition: the party that wants the result, view: deployment }
+  - { id: supply, label: supply side, membership: [worker], definition: the party that produces it, view: deployment }
+
+# Selection is data. `dspec plan` refuses a pairing that cannot express the view.
+renderers:
+  behaviour: { adapter: d2, fallback: mermaid }
+  deployment: { adapter: d2 }

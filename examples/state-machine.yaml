@@ -1,0 +1,56 @@
+# A state-kind behaviour view: the same schema, a different way of showing a cycle.
+meta:
+  title: Import job lifecycle
+  subtitle: one file in, repeated repair attempts, one published artifact out
+  source_of_truth:
+    - docs/import-runbook.md
+  reading_direction: left-right
+
+views:
+  - id: behaviour
+    kind: state
+    caption: the lifecycle, including the retry that repeats and what stops it
+  - id: deployment
+    kind: component
+    caption: what runs where
+
+actors:
+  - { id: operator, label: Operator, role: starts the import and accepts failures, kind: human }
+  - { id: importer, label: Importer, role: parses, repairs and publishes, kind: service }
+  - { id: store, label: Store, role: keeps the imported rows and the run log, kind: store }
+
+vocabulary:
+  - { label: start, kind: control, symmetric: false }
+  - { label: repair, kind: control, symmetric: false }
+  - { label: load, kind: data, symmetric: false }
+  - { label: reject, kind: verdict, symmetric: false }
+
+messages:
+  - { from: operator, to: importer, label: start, view: behaviour }
+  - { from: importer, to: store, label: load, view: behaviour }
+  - { from: importer, to: importer, label: repair, view: behaviour }
+  - { from: operator, to: importer, label: reject, view: behaviour }
+
+loops:
+  - id: repair-loop
+    over: [importer]
+    exit: three repair attempts, or a clean parse
+    view: behaviour
+
+terminal:
+  - actor: importer
+    action: publishes the import summary
+    produces: [import-summary.json]
+
+legend:
+  - { class: control, meaning: an instruction that starts or repeats work }
+  - { class: data, meaning: rows written to the store }
+  - { class: verdict, meaning: a decision that ends the run }
+
+bands:
+  - { id: operator-side, label: operator side, membership: [operator], definition: the human who decides, view: deployment }
+  - { id: runtime, label: runtime, membership: [importer, store], definition: the process and its storage, view: deployment }
+
+renderers:
+  behaviour: { adapter: mermaid }
+  deployment: { adapter: svg }

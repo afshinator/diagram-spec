@@ -1,0 +1,60 @@
+# The reference case from §15: six renderers once drew this system as boxes and
+# arrows with no actors and no loop. The gate now refuses that artifact.
+meta:
+  title: Supervisor and peers
+  subtitle: dispatch, relay, attest — repeated until the DoD holds
+  source_of_truth:
+    - docs/diagram-spec-bootstrap.md
+  reading_direction: top-down
+
+views:
+  - id: behaviour
+    kind: sequence
+    caption: who dispatches, who reports, and what ends the run
+  - id: deployment
+    kind: component
+    caption: what runs where
+
+actors:
+  - { id: supervisor, label: Supervisor, role: dispatches work, owns the definition of done, kind: service }
+  - { id: dev_a, label: dev_a, role: implements one slice and reports evidence, kind: human }
+  - { id: dev_b, label: dev_b, role: implements one slice and reports evidence, kind: human }
+
+vocabulary:
+  - { label: dispatch, kind: control, symmetric: false }
+  - { label: relay, kind: control, symmetric: false }
+  - { label: steer, kind: control, symmetric: false }
+  - { label: report, kind: report, symmetric: false }
+  - { label: attest, kind: verdict, symmetric: false }
+
+messages:
+  - { from: supervisor, to: dev_a, label: dispatch, view: behaviour }
+  - { from: dev_a, to: dev_b, label: relay, view: behaviour }
+  - { from: supervisor, to: dev_b, label: steer, view: behaviour }
+  - { from: dev_b, to: supervisor, label: report, view: behaviour }
+  - { from: dev_a, to: supervisor, label: report, view: behaviour }
+  - { from: supervisor, to: dev_a, label: attest, view: behaviour }
+
+loops:
+  - id: peer-loop
+    over: [supervisor, dev_a, dev_b]
+    exit: every peer has reported and the supervisor attests the definition of done
+    view: behaviour
+
+terminal:
+  - actor: supervisor
+    action: finalizes and publishes the artifacts
+    produces: [plan.md, evidence.md]
+
+legend:
+  - { class: control, meaning: work handed down or sideways }
+  - { class: report, meaning: status and evidence coming back }
+  - { class: verdict, meaning: attesting that the work holds }
+
+bands:
+  - { id: control, label: control plane, membership: [supervisor], definition: the scheduler that owns the loop, view: deployment }
+  - { id: peers, label: peers, membership: [dev_a, dev_b], definition: the implementers, each with its own context, view: deployment }
+
+renderers:
+  behaviour: { adapter: d2, fallback: mermaid }
+  deployment: { adapter: d2 }

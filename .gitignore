@@ -1,5 +1,5 @@
 .DS_Store
 node_modules/
-bun.lock*
-*.svg.tmp
 out/
+.tmp/
+.fallow/
