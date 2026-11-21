@@ -39,8 +39,11 @@ telemetry, no postinstall. Install the CLI as a binary with
 | `mermaid` | native | native | native | no, emit-only | `mmdc` (node + chromium) if you want SVG |
 | `svg` | native (manual) | native (manual) | native (manual) | writes SVG | none |
 
-Capabilities are measured, not assumed; see the commit that seeds them and
-`dspec adapters` for the live declaration. Selection lives in the YAML (`renderers:`), and `dspec plan` refuses an invalid
+Capabilities are measured, not assumed. The seed table in
+`docs/diagram-spec-bootstrap.md` §7 predates any tool being run; the measurements,
+commands and observed output that decide each claim live in
+`docs/adapter-findings.md`, and `dspec adapters` prints the live declaration.
+Selection lives in the YAML (`renderers:`), and `dspec plan` refuses an invalid
 configured pairing rather than selecting another adapter.
 
 ## Layout

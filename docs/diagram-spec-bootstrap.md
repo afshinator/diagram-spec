@@ -220,7 +220,8 @@ export interface RendererAdapter {
 
 Capability matrix to seed the adapters (native / approximable / no). Verify each
 claim against the installed tool at implementation time; do not trust this table
-as fact:
+as fact. Measured results, with the commands that show them, are recorded in
+`docs/adapter-findings.md` and supersede this table where they disagree:
 
 | Adapter | sequence | state | component | Runtime |
 |---|---|---|---|---|
