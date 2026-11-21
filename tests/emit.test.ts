@@ -221,6 +221,16 @@ describe("dspec emit", () => {
       const behaviour = await Bun.file(`${outDir}/behaviour.svg`).text();
       mustContain(behaviour, [...actorLabels, ...messageLabels, loop.id, String(loop.exit)]);
 
+      // #8: a render must not invent participants. d2 gives every node a lifeline, so a
+      // title, legend or loop annotation emitted as a node would add one column per
+      // annotation. One lifeline per declared actor is the failure mode made checkable.
+      if (adapter === "d2") {
+        const lifelines = [...behaviour.matchAll(/d="M ([\d.]+) [\d.]+ L ([\d.]+) [\d.]+"/g)].filter(
+          (match) => match[1] === match[2],
+        );
+        expect({ adapter, lifelines: lifelines.length }).toEqual({ adapter, lifelines: spec.actors.length });
+      }
+
       // The deployment artifact carries every actor.
       const deployment = await Bun.file(`${outDir}/deployment.svg`).text();
       mustContain(deployment, actorLabels);

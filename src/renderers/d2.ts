@@ -6,7 +6,7 @@ const escape = (text: string) => text.replace(/\\/g, "\\\\").replace(/"/g, '\\"'
 const quote = (text: string) => `"${escape(text)}"`;
 const textNode = (key: string, body: string) => `${key}: ${quote(body)} { shape: text }`;
 
-/** d2 rejects markdown table rows inside block strings, so the legend is text nodes. */
+/** Graph views have no participant columns, so a legend container and text nodes are safe here. */
 function legendBlock(spec: DiagramContent): string[] {
   if (spec.legend.length === 0) return [];
   return [
@@ -57,20 +57,20 @@ function bandContainer(band: Band, spec: DiagramContent): string[] {
 function sequenceView(spec: DiagramContent, view: View): string {
   const messages = messagesOf(spec, view);
   const loops = loopsOf(spec, view);
-  const span = spec.actors.length >= 2 ? [spec.actors[0]!.id, spec.actors.at(-1)!.id] : [];
   const legend = legendText(spec);
   return (
     [
       GENERATED_HEADER,
-      // `title:` is not a sequence-diagram field: d2 renders it as a participant.
+      // A sequence diagram turns any node into a participant column: `note over`, a text
+      // shape and a legend container each rendered an extra lifeline (measured, see
+      // docs/adapter-findings.md). Only a group label carries text without inventing an
+      // actor, so the loop rides its frame and the legend stays in the source comment.
       `# title: ${spec.meta.title} — ${view.caption}`,
       `# reading: ${spec.meta.reading_direction}`,
+      ...(legend ? [`# legend: ${legend}`] : []),
       "shape: sequence_diagram",
       ...spec.actors.map((actor) => `${actor.id}: ${quote(actor.label)}`),
-      ...(span.length === 2 ? [`note over ${span.join(", ")}: ${quote(`${spec.meta.title} — ${view.caption}`)}`] : []),
       ...groupedMessages(spec, messages, loops),
-      ...loops.map((loop) => `note over ${loop.over.join(", ")}: ${quote(`loop ${loop.id} — exit: ${loop.exit ?? ""}`)}`),
-      ...(legend && span.length === 2 ? [`note over ${span.join(", ")}: ${quote(`legend: ${legend}`)}`] : []),
     ].join("\n") + "\n"
   );
 }

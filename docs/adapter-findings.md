@@ -79,9 +79,34 @@ M 212 120 L 212 357
 M 362.5 120 L 362.5 357   <- third lifeline, from the note; only 2 participants exist
 ```
 
-Consequence: a d2 sequence render currently shows legend and loop notes as extra
-columns. Whether d2 offers a header-free annotation in sequence diagrams is unproven;
-tracked as its own issue rather than silently tolerated.
+### Every text construct except a group label invents a column
+
+Measured across the constructs a sequence diagram might use for a title, a legend or
+a loop annotation. Two actors declared in each case; the actor row is the text at
+`y=90.5`, so anything extra there is a column:
+
+| Construct | Actor row | Extra column |
+|---|---|---|
+| baseline, two actors | `Supervisor, dev_a` | no |
+| `note over sup, a: "a note"` | `Supervisor, dev_a, a note` | **yes** |
+| `view_note: "..." { shape: text }` | `Supervisor, dev_a` | **yes** (third lifeline at x=397) |
+| `legend: Legend { ... }` | `Supervisor, dev_a, Legend` | **yes** |
+| `group: "..." { ... }` | `Supervisor, dev_a` | no |
+
+Consequences, and the choice made (#8):
+
+- **Loop id and exit** ride the `group:` label. `loopLabel` already emits
+  `"<id> over <actors> until <exit>"`, so the frame carries the exit with no extra
+  column.
+- **Title and legend** are emitted as source comments (`# title:`, `# legend:`) and do
+  not appear in the rendered picture. This is deliberate: the project rule is that a
+  render must not invent structure the YAML never declared, and every visible
+  alternative invents a participant. Read the legend from the YAML or from the svg
+  adapter; a d2 sequence render shows actors, messages and loop frames only.
+
+Verified on the committed example: `d2 generated/peer-system/behaviour.d2` produces
+exactly three lifelines for three actors, and carries the loop id and exit on the
+frame.
 
 ### Block strings reject markdown table rows
 
@@ -94,7 +119,11 @@ $ d2 md.d2 md.svg
 err: failed to compile md.d2: md.d2:5:6: unexpected text after md block string.
 ```
 
-Consequence: the legend is emitted as plain text nodes, one per class.
+Consequence: a `|md` block cannot carry the legend table. In a graph view this does
+not matter — the legend is a `legend: Legend { ... }` container of text nodes, and graph
+views have no participant columns to invent. In a sequence view the legend becomes a
+`# legend:` source comment instead, because every visible form there adds a lifeline
+(see the construct table above).
 
 ### `direction:` is only honoured when blocks are linked
 
