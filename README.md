@@ -63,8 +63,18 @@ SKILL.md             agent skill: content authoring, never rendering
 ```sh
 bun run typecheck
 bun run test
-bun run check        # typecheck + tests + fallow audit
+bun run generated   # regenerate committed renderer DSLs
+bun run check       # typecheck + tests + generated drift check + fallow audit
 ```
+
+## Generated files
+
+`generated/` holds renderer-native DSL produced by `dspec emit` from the fixtures in
+`examples/`, one directory per fixture. Each file carries the adapter's
+do-not-edit header. The YAML is authoritative: edit the YAML, then run
+`bun run generated` and commit both. Hand edits to `generated/` are unsupported and
+fail `bun run check`, which verifies every committed file byte-for-byte against
+fresh output and reports missing, changed and stale files.
 
 ## The skill
 

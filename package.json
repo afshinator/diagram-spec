@@ -9,9 +9,10 @@
   },
   "scripts": {
     "dspec": "bun src/cli.ts",
+    "generated": "bun scripts/generated.ts --write",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "check": "bun run typecheck && bun test && fallow audit",
+    "check": "bun run typecheck && bun test && bun scripts/generated.ts && fallow audit",
     "build": "bun build --compile src/cli.ts --outfile bin/dspec"
   },
   "dependencies": {
