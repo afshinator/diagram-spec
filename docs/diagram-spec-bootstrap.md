@@ -227,7 +227,7 @@ as fact. Measured results, with the commands that show them, are recorded in
 |---|---|---|---|---|
 | mermaid | native | native | native | node + headless browser |
 | graphviz (dot) | approximable | native | native | dot binary or WASM |
-| d2 | approximable | native | native | single self-contained binary |
+| d2 | native | native | native | single self-contained binary |
 | excalidraw | approximable | approximable | native | node + headless browser |
 | svg (hand-authored) | native (manual) | native (manual) | native (manual) | none |
 | fireworks-tech-graph | no | approximable | native | python3 |

@@ -20,21 +20,27 @@ reproduce; nothing here depends on a model or a network fetch.
 
 ### `sequence` is native
 
-§7's seed table lists d2 `sequence` as `approximable`. Measured: d2 renders a real
-sequence diagram — participant headers, ordered messages with arrow heads, and loop
-blocks.
+§7's seed table originally listed d2 `sequence` as `approximable`; the row now reads
+`native` because of this measurement. d2 renders a real sequence diagram —
+participant headers, ordered messages with arrow heads, and loop frames.
 
 ```
-$ printf 'shape: sequence_diagram\nsup -> a: dispatch\nspan: work-loop\na -> sup: report\nspan: work-loop\n' > seq.d2
+$ printf 'shape: sequence_diagram\nsup: Supervisor\na: dev_a\ngroup: "work-loop" {\n  sup -> a: dispatch\n  a -> sup: report\n}\n' > seq.d2
 $ d2 seq.d2 seq.svg
-success: successfully compiled seq.d2 to seq.svg in 4.8ms
-$ grep -o '<text[^>]*>[^<]*</text>' seq.svg | sed 's/<[^>]*>//g'
-sup
-a
-work-loop
-dispatch
-report
+success: successfully compiled seq.d2 to seq.svg in 13.5ms
+$ grep -o 'viewBox="0 0 [0-9]* [0-9]*"' seq.svg
+viewBox="0 0 461 539"     # the same two messages without the group: viewBox="0 0 461 508"
+$ grep -o '<text[^>]*>work-loop</text>' seq.svg
+<text x="71" y="196" ...>work-loop</text>
 ```
+
+The loop label sits at `y=196`, below the actor row at `y=90.5`, and the frame adds
+vertical space. That is a loop frame wrapped around the messages, not a column:
+contrast the phantom-column findings below, where a stray label lands on the actor row.
+
+`span:` is **not** a sequence keyword. Used in a sequence diagram it behaves exactly
+like the phantom column described below, so the adapter emits `group:` and never
+`span:`.
 
 `state` and `component` are also native, as the seed table says. All three shipped
 adapters therefore declare `native` for every view kind.
