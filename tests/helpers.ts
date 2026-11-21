@@ -47,7 +47,7 @@ export function validSpec(): DiagramContent {
       { class: "report" as const, meaning: "status back to the supervisor" },
     ],
     renderers: {
-      behaviour: { adapter: "d2", fallback: "mermaid" },
+      behaviour: { adapter: "d2" },
       deployment: { adapter: "d2" },
     },
   };

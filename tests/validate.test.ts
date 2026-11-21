@@ -165,26 +165,12 @@ describe("dspec validate", () => {
     expect(result.errors.some((e) => e.path === "views[2].id")).toBe(true);
   });
 
-  test("accepts a pairing whose fallback can express the view", () => {
+  test("rejects an invalid adapter even when legacy YAML names a fallback", () => {
     const spec = validSpec();
     spec.renderers = { behaviour: { adapter: "no-cycles", fallback: "svg" }, deployment: { adapter: "svg" } } as never;
     const result = validate(spec, { adapters: { ...shipped, "no-cycles": fakeAdapter({ sequence: "no" }) } });
-    expect(result.ok).toBe(true);
-  });
-
-  test("rejects a pairing whose adapter and fallback both cannot express the view", () => {
-    const spec = validSpec();
-    spec.renderers = {
-      behaviour: { adapter: "no-cycles", fallback: "also-no" },
-      deployment: { adapter: "svg" },
-    } as never;
-    const adapters = {
-      ...shipped,
-      "no-cycles": fakeAdapter({ sequence: "no" }),
-      "also-no": fakeAdapter({ sequence: "no" }),
-    };
-    const result = validate(spec, { adapters });
-    expect(result.errors.some((e) => e.reason.includes("fallback refused too"))).toBe(true);
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.reason.includes("capabilities.sequence = no"))).toBe(true);
   });
 
   test("reports a schema error in the same path + reason shape", () => {

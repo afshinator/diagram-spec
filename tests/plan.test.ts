@@ -23,14 +23,16 @@ describe("dspec plan", () => {
     expect(result.ok).toBe(false);
   });
 
-  test("uses a declared fallback instead of selecting one", () => {
+  test("refuses an invalid primary even when the YAML names another adapter", () => {
     const spec = validSpec();
-    spec.renderers = { behaviour: { adapter: "no-cycles", fallback: "svg" }, deployment: { adapter: "svg" } };
+    // The schema owns the accepted shape; this malformed legacy input must not
+    // become an implicit selection mechanism.
+    spec.renderers = { behaviour: { adapter: "no-cycles", fallback: "svg" }, deployment: { adapter: "svg" } } as never;
     const result = plan(spec, { ...registry, "no-cycles": fakeAdapter({ sequence: "no" }) });
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     const entry = result.entries.find((candidate) => candidate.view.id === "behaviour");
-    expect(entry?.adapter?.id).toBe("svg");
-    expect(entry?.via).toBe("fallback");
+    expect(entry?.adapter).toBeUndefined();
+    expect(entry?.refused?.reason).toContain("capabilities.sequence = no");
   });
 
   test("refuses a view with no configured renderer", () => {

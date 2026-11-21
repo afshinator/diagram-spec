@@ -56,5 +56,5 @@ bands:
   - { id: peers, label: peers, membership: [dev_a, dev_b], definition: the implementers, each with its own context, view: deployment }
 
 renderers:
-  behaviour: { adapter: d2, fallback: mermaid }
+  behaviour: { adapter: d2 }
   deployment: { adapter: d2 }

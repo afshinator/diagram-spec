@@ -60,5 +60,5 @@ bands:
 
 # Selection is data. `dspec plan` refuses a pairing that cannot express the view.
 renderers:
-  behaviour: { adapter: d2, fallback: mermaid }
+  behaviour: { adapter: d2 }
   deployment: { adapter: d2 }

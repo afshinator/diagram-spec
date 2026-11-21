@@ -109,7 +109,7 @@ const sourceRule: Rule = (spec, push) => {
   }
 };
 
-/** 10: every configured pairing must be able to draw its view, fallback included. */
+/** 10: every configured pairing must be able to draw its view. */
 const rendererRules = (adapters: Registry): Rule => (spec, push) => {
   for (const viewId of Object.keys(spec.renderers).sort(byCodeUnit)) {
     const view = spec.views.find((candidate) => candidate.id === viewId);

@@ -63,7 +63,6 @@ const LegendEntry = z.object({
 
 const RendererChoice = z.object({
   adapter: z.string().min(1),
-  fallback: z.string().min(1).optional(),
 });
 
 const DiagramSchema = z.object({

@@ -40,8 +40,8 @@ telemetry, no postinstall. Install the CLI as a binary with
 | `svg` | native (manual) | native (manual) | native (manual) | writes SVG | none |
 
 Capabilities are measured, not assumed; see the commit that seeds them and
-`dspec adapters` for the live declaration. Selection lives in the YAML
-(`renderers:`), and `dspec plan` only refuses — it never auto-selects.
+`dspec adapters` for the live declaration. Selection lives in the YAML (`renderers:`), and `dspec plan` refuses an invalid
+configured pairing rather than selecting another adapter.
 
 ## Layout
 

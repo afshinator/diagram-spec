@@ -50,35 +50,13 @@ export type PlanEntry = {
   view: View;
   adapter?: RendererAdapter;
   capability?: Capability;
-  via?: "selected" | "fallback";
   refused?: { code: string; reason: string };
 };
 
 export type Plan = { entries: PlanEntry[]; ok: boolean };
 
-function selectedEntry(view: View, adapter: RendererAdapter, via: "selected" | "fallback" = "selected"): PlanEntry {
-  return { view, adapter, capability: adapter.capabilities[view.kind], via };
-}
-
-function refusedEntry(
-  view: View,
-  problem: { code: string; reason: string } | null,
-  fallbackRefused: boolean,
-): PlanEntry {
-  const base = problem?.reason ?? "no adapter";
-  const reason = fallbackRefused ? `${base}; fallback refused too` : base;
-  return { view, refused: { code: problem?.code ?? "adapter-capability-missing", reason } };
-}
-
-function fallbackEntry(
-  view: View,
-  choice: { adapter: string; fallback?: string },
-  problem: { code: string; reason: string } | null,
-  registry: Registry,
-): PlanEntry {
-  const fallback = choice.fallback ? registry[choice.fallback] : undefined;
-  if (fallback && !pairingProblem(choice.fallback!, fallback, view)) return selectedEntry(view, fallback, "fallback");
-  return refusedEntry(view, problem, Boolean(choice.fallback));
+function selectedEntry(view: View, adapter: RendererAdapter): PlanEntry {
+  return { view, adapter, capability: adapter.capabilities[view.kind] };
 }
 
 /** Resolve one view to an adapter. Refuses invalid pairings; never auto-selects. */
@@ -89,7 +67,8 @@ export function resolveView(view: View, spec: DiagramContent, registry: Registry
   }
   const selected = registry[choice.adapter];
   const problem = pairingProblem(choice.adapter, selected, view);
-  return !problem && selected ? selectedEntry(view, selected) : fallbackEntry(view, choice, problem, registry);
+  if (problem) return { view, refused: problem };
+  return selectedEntry(view, selected!);
 }
 
 /** Resolve every view to an adapter, in a deterministic order. */
@@ -103,7 +82,6 @@ export function plan(spec: DiagramContent, registry: Registry): Plan {
 export function describePlan(result: Plan): string[] {
   return result.entries.map((entry) => {
     if (entry.refused) return `${entry.view.id} (${entry.view.kind}): refused — ${entry.refused.reason}`;
-    const via = entry.via === "fallback" ? " via fallback" : "";
-    return `${entry.view.id} (${entry.view.kind}): ${entry.adapter?.id}${via} — ${entry.capability}`;
+    return `${entry.view.id} (${entry.view.kind}): ${entry.adapter?.id} — ${entry.capability}`;
   });
 }
