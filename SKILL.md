@@ -41,9 +41,9 @@ rendering skill; this one owns what the picture is allowed to say.
 4. **Pick the behaviour shape the content actually has:** chronological interaction
    is a `sequence` view, a lifecycle of one participant is a `state` view. Judging
    which kinds are admissible is the gate's job, not this list's — if the choice is
-   wrong, `dspec validate` says so in `views[i].kind` terms.
+   wrong, the gate says so.
 5. **Author `diagram-content.yaml`** from `assets/diagram-content.yaml`. Write the
-   vocabulary before the messages, and use those labels for every arrow.
+   vocabulary before the messages.
 6. **Gate it:** `dspec validate diagram-content.yaml`. On failure, read `path:
    reason`, fix the content, re-run. Never proceed while it exits non-zero.
 7. **Resolve the pairing:** `dspec plan diagram-content.yaml`. The renderer is
@@ -70,11 +70,11 @@ dspec adapters                   # declared capabilities, measured not assumed
 ## What the gate is for
 
 The failure this skill exists to prevent is an artifact that looks competent and
-says nothing about behaviour: no named participants, no repetition, no exit
-condition, one undifferentiated arrow class, no legend, direction left to the
-engine. Those are structural, so they are enforced in one place — the gate — and
-the fix is always to edit the YAML until `dspec validate` exits 0, never to argue
-with the diagram.
+still says nothing about behaviour. That failure is structural, which is why it is
+enforced in exactly one place: run `dspec validate` and it reports each omission as
+`path: reason`. The skill's job is to fix the YAML until the gate exits 0. It never
+re-checks a condition the gate already reported, and it never argues with the
+diagram.
 
 Worked starting points live in `examples/` (`peer-system.yaml` for a two-view
 sequence case, `state-machine.yaml` for a state-kind behaviour view) and in
